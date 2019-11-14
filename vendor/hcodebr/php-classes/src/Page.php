@@ -6,15 +6,19 @@ namespace Hcode;
 // Dependencies from this file
 use Rain\Tpl;
 
-class Page {
+class Page
+{
     private $tpl;
     private $options = [];
     private $defaults = [
+        "header"=>true,
+        "footer"=>true,
         "data"=>[]
     ];
 
     public function __construct($opts = array(), $tpl_dir = "/views/")
     {
+        // $opts values overrides the defaults values
         $this->options = array_merge($this->defaults, $opts);
 
         $config = array(
@@ -23,20 +27,21 @@ class Page {
             "debug"         => false // set to false to improve the speed
         );
     
-        Tpl::configure( $config );
+        Tpl::configure($config);
     
         $this->tpl = new Tpl;
         
         $this->setData($this->options["data"]);
         
-        $this->tpl->draw("header");
+        if ($this->options["header"] === true) {
+            $this->tpl->draw("header");
+        }
     }
 
     // Pass data into template
     private function setData($data = array())
     {
-        foreach ($data as $key => $value) 
-        {
+        foreach ($data as $key => $value) {
             $this->tpl->assign($key, $value);
         }
     }
@@ -48,12 +53,10 @@ class Page {
         return $this->tpl->draw($name, $returnHTML);
     }
 
-
     public function __destruct()
     {
-        $this->tpl->draw("footer");
+        if ($this->options["footer"] === true) {
+            $this->tpl->draw("footer");
+        }
     }
 }
-
-
-?>
