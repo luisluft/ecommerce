@@ -7,6 +7,9 @@ class Model
 {
     private $values = [];
 
+    /**
+    * Dynamically calls every possible 'setter' and 'getter'
+    */
     public function __call($name, $args)
     {
         $method = substr($name, 0, 3);
@@ -24,7 +27,7 @@ class Model
     }
 
     /**
-     * Dynamically calls every possible 'setter'
+     * Dinamically calls every setter using the variable names
      */
     public function setData($data = array())
     {
