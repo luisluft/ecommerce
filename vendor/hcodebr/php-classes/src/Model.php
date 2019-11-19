@@ -37,6 +37,9 @@ class Model
         }
     }
 
+    /**
+     * @return $this->values
+     */
     public function getValues()
     {
         return $this->values;
