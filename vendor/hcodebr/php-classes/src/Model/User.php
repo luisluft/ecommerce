@@ -14,6 +14,49 @@ class User extends Model
     const SECRET = "HcodePhp7_Secret"; // This value must be kept secret so only the code creator will be able to decrypt the hashes
     const SECRET_IV = "HcodePhp7_Secret_IV"; // This value must be kept secret so only the code creator will be able to decrypt the hashes
 
+    /**
+     * Return the logged in user or return a empty User object
+     */
+    public static function getFromSession()
+    {
+        $user = new User();
+
+        if (isset($_SESSION[User::SESSION]) && (int)$_SESSION[User::SESSION] > 0) {
+            $user->setData($_SESSION[User::SESSION]);
+        }
+        return $user;
+    }
+
+    /**
+     * Check if there is a logged in user and if it
+     * has the necessary admin privileges to access the page requested
+     *
+     * @param bool $inadmin Whether the page accessed is for admin use only
+     *
+     * @return bool true if has access, false if not
+     */
+    public static function checkLogin($inadmin = true)
+    {
+        if (!isset($_SESSION[User::SESSION]) // Session does not exist
+            || !$_SESSION[User::SESSION] // Session is empty
+            || !(int)$_SESSION[User::SESSION]["iduser"] > 0 // iduser has invalid value
+        ) {
+            // User not logged in
+            return false;
+        } else {
+            if ($inadmin === true && (bool)$_SESSION[User::SESSION]['inadmin'] === true) {
+                // Page requested is admin page and logged in user is also an admin
+                return true;
+            } elseif ($inadmin === false) {
+                // Page requested is not admin page
+                return true;
+            } else {
+                // User not logged in
+                return false;
+            }
+        }
+    }
+
     public static function login($login, $password)
     {
         // Access database with the login inputted via form
@@ -41,15 +84,7 @@ class User extends Model
 
     public static function verifyLogin($inadmin = true)
     {
-        if (
-            !isset($_SESSION[User::SESSION]) // Session does not exist
-            ||
-            !$_SESSION[User::SESSION] // Session is empty
-            ||
-            !(int)$_SESSION[User::SESSION]["iduser"] > 0 // iduser has invalid value
-            ||
-            (bool)$_SESSION[User::SESSION]["inadmin"] !== $inadmin // Logged in user is not admin
-        ) {
+        if (User::checkLogin($inadmin)) {
             header("Location: /admin/login");
             exit;
         }
