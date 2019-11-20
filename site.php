@@ -3,8 +3,8 @@
 use Hcode\Page;
 use \Hcode\PageAdmin;
 use \Hcode\Model\Product;
-use \Hcode\Model\Category;
 use \Hcode\Model\Cart;
+use \Hcode\Model\Category;
 
 // Redirects the site via GET at route '/'
 $app->get(
@@ -17,7 +17,7 @@ $app->get(
         $page->setTpl(
             "index",
             [
-            'products'=>Product::checkList($products)
+                 'products'=>Product::checkList($products)
             ]
         ); // adds the index.html
     }
@@ -40,9 +40,9 @@ $app->get(
             array_push(
                 $pages,
                 [
-                'link'=>'/categories/' . $category->getidcategory() . '?page=' . $i,
-                'page'=>$i
-                 ]
+                    'link'=>'/categories/' . $category->getidcategory() . '?page=' . $i,
+                    'page'=>$i
+                ]
             );
         }
 
@@ -51,9 +51,9 @@ $app->get(
         $page->setTpl(
             "category",
             [
-            "category"=>$category->getValues(),
-            "products"=>$pagination["data"],
-            "pages"=>$pages
+                "category"=>$category->getValues(),
+                "products"=>$pagination["data"],
+                "pages"=>$pages
             ]
         );
     }
@@ -85,6 +85,67 @@ $app->get(
 
         $page = new Page();
 
-        $page->setTpl("cart");
+        $page->setTpl(
+            "cart",
+            [
+                'cart'=>$cart->getValues(),
+                'products'=>$cart->getProducts()
+            ]
+        );
+    }
+);
+
+$app->get(
+    "/cart/:idproduct/add",
+    function ($idproduct) {
+        $product = new Product();
+
+        $product->get((int)$idproduct);
+
+        $cart = Cart::getFromSession();
+
+        $qtd = (isset($_GET['qtd'])) ? (int)$_GET['qtd'] : 1;
+
+        for ($i=0; $i < $qtd; $i++) {
+            $cart->addProduct($product);
+        }
+
+        header("Location: /cart");
+        
+        exit;
+    }
+);
+
+$app->get(
+    "/cart/:idproduct/minus",
+    function ($idproduct) {
+        $product = new Product();
+
+        $product->get((int)$idproduct);
+
+        $cart = Cart::getFromSession();
+
+        $cart->removeProduct($product);
+
+        header("Location: /cart");
+        
+        exit;
+    }
+);
+
+$app->get(
+    "/cart/:idproduct/remove",
+    function ($idproduct) {
+        $product = new Product();
+
+        $product->get((int)$idproduct);
+
+        $cart = Cart::getFromSession();
+
+        $cart->removeProduct($product, true);
+
+        header("Location: /cart");
+        
+        exit;
     }
 );
