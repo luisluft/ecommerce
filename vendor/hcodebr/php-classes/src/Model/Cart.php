@@ -12,13 +12,14 @@ use \Hcode\Model\User;
 class Cart extends Model
 {
     const SESSION = "Cart";
-
+    const SESSION_ERROR = "CartError";
+    
     /**
      * Restores the cart from the current session
      * or, if there is none, create one
      * and save the products in the cart table inside the database
      *
-     * @return void
+     * @return object Cart()
      */
     public static function getFromSession()
     {
@@ -138,6 +139,8 @@ class Cart extends Model
                 ":idproduct"=>$product->getidproduct()
             ]
         );
+
+        $this->getCalculateTotal();
     }
 
     public function removeProduct(Product $product, $all = false)
@@ -171,6 +174,7 @@ class Cart extends Model
                 ]
             );
         }
+        $this->getCalculateTotal();
     }
 
     public function getProducts()
@@ -193,5 +197,157 @@ class Cart extends Model
         );
 
         return Product::checkList($rows);
+    }
+
+    /**
+     * Sum up all the necessary properties from all the products
+     * in the cart to calculate the sending costs
+     *
+     * @return array containing the sum totals: width, height,length, weight and the count of items
+     */
+    public function getProductsTotals()
+    {
+        $sql = new Sql();
+
+        $results = $sql->select(
+            "SELECT SUM(vlprice) AS vlprice, 
+            SUM(vlwidth) as vlwidth,
+            SUM(vlheight) as vlheight,
+            SUM(vllength) as vllength,
+            SUM(vlweight) as vlweight,
+            COUNT(*) as nrqtd  
+            FROM tb_products a
+            INNER JOIN tb_cartsproducts b
+            ON a.idproduct = b.idproduct
+            WHERE b.idcart = :idcart AND dtremoved IS NULL",
+            [
+                ':idcart'=>$this->getidcart()
+            ]
+        );
+
+        if (count($results) > 0) {
+            return $results[0];
+        } else {
+            return [];
+        }
+    }
+
+    /**
+     * Calculate the freight via CORREIOS API
+     */
+    public function setFreight($nrzipcode)
+    {
+        // Make sure zip code is only numbers
+        $nrzipcode = str_replace('-', '', $nrzipcode);
+
+        $totals = $this->getProductsTotals();
+        
+        // Make sure exists items in cart
+        if ($totals['nrqtd'] > 0) {
+            // Limit the height to a minimum 2cm
+            if ($totals['vlheight'] < 2) {
+                $totals['vlheight'] = 2;
+            }
+            
+            // Limit the length to a minimum 16cm
+            if ($totals['vllength'] < 16) {
+                $totals['vllength'] = 16;
+            }
+            
+            $qs = http_build_query(
+                [
+                    'nCdEmpresa'=>'',
+                    'sDsSenha'=>'',
+                    'nCdServico'=>'40010',
+                    'sCepOrigem'=>'09853120',
+                    'sCepDestino'=>$nrzipcode,
+                    'nVlPeso'=>$totals['vlweight'],
+                    'nCdFormato'=>'1',
+                    'nVlComprimento'=>$totals['vllength'],
+                    'nVlAltura'=>$totals['vlheight'],
+                    'nVlLargura'=>$totals['vlwidth'],
+                    'nVlDiametro'=>'0',
+                    'sCdMaoPropria'=>'S',
+                    'nVlValorDeclarado'=>$totals['vlprice'],
+                    'sCdAvisoRecebimento'=>'S',
+                ]
+            );
+
+            // API webpage
+            $xml = simplexml_load_file("http://ws.correios.com.br/calculador/CalcPrecoPrazo.asmx/CalcPrecoPrazo?" . $qs);
+
+            $result = $xml->Servicos->cServico;
+            
+            // Set or clear the error messages from the API
+            if ($result->MsgErro != '') {
+                Cart::setMsgError($result->MsgErro);
+            } else {
+                Cart::clearMsgError();
+            }
+
+            $this->setnrdays($result->PrazoEntrega);
+            $this->setvlfreight(Cart::formatValueToDecimal($result->Valor));
+            $this->setdeszipcode($nrzipcode);
+
+            $this->save();
+
+            return $result;
+        }
+    }
+
+    /**
+     * Formats the brazillian number standard 10,25
+     * to the american standard 10.25
+     */
+    public static function formatValueToDecimal($value):float
+    {
+        $value = str_replace('.', '', $value);
+        return str_replace(',', '.', $value);
+    }
+
+    public static function setMsgError($msg)
+    {
+        $_SESSION[Cart::SESSION_ERROR] = $msg;
+    }
+
+    public static function getMsgError()
+    {
+        $msg = (isset($_SESSION[Cart::SESSION_ERROR]))? $_SESSION[Cart::SESSION_ERROR] : "";
+
+        Cart::clearMsgError();
+        
+        return $msg;
+    }
+
+    public static function clearMsgError()
+    {
+        $_SESSION[Cart::SESSION_ERROR] = null;
+    }
+
+    public function updateFreight()
+    {
+        // Zip code already inserted
+        if ($this->getdeszipcode() != '') {
+            $this->setFreight($this->getdeszipcode());
+        } else {
+            # code...
+        }
+    }
+
+    public function getValues()
+    {
+        $this->getCalculateTotal();
+        
+        return parent::getValues();
+    }
+
+    public function getCalculateTotal()
+    {
+        $this->updateFreight();
+
+        $totals = $this->getProductsTotals();
+        
+        $this->setvlsubtotal($totals['vlprice']);
+        $this->setvltotal($totals['vlprice'] + $this->getvlfreight());
     }
 }
