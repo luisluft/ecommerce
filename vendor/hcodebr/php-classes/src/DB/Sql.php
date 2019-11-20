@@ -32,6 +32,17 @@ class Sql
         $statement->bindParam($key, $value);
     }
 
+    /**
+     * Prepares the query statement,
+     * Binds each parameter to the query,
+     * and finally executes the query
+     *
+     * @param string $rawQuery SQL query to be executed
+     *
+     * @param array $params [optional] each of the parameters to be bound to the query
+     *
+     * @return void
+     */
     public function query($rawQuery, $params = array())
     {
         $stmt = $this->conn->prepare($rawQuery);
