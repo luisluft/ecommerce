@@ -14,6 +14,7 @@ class User extends Model
     const SECRET = "HcodePhp7_Secret"; // This value must be kept secret so only the code creator will be able to decrypt the hashes
     const SECRET_IV = "HcodePhp7_Secret_IV"; // This value must be kept secret so only the code creator will be able to decrypt the hashes
     const ERROR = "UserError";
+    const ERROR_REGISTER = "UserRegisterError";
 
     /**
      * Return the logged in user or return a empty User object
@@ -331,5 +332,48 @@ class User extends Model
                 'cost'=>12
             ]
         );
+    }
+
+    public static function setRegisterError($msg)
+    {
+        $_SESSION[User::ERROR_REGISTER] = $msg;
+    }
+
+    public static function clearRegisterError()
+    {
+        $_SESSION[User::ERROR_REGISTER] = null;
+    }
+    
+    public static function getRegisterError()
+    {
+        $msg = (isset($_SESSION[User::ERROR_REGISTER]) && $_SESSION[User::ERROR_REGISTER]) ? $_SESSION[User::ERROR_REGISTER] : '';
+
+        User::clearRegisterError();
+
+        return $msg;
+    }
+
+    /**
+     * Query the database for all the data related to the
+     * provided login information
+     *
+     * @param string $login existing login to the site
+     *
+     * @return boolean true if login exists
+     * false if it does not
+     */
+    public static function checkLoginExist($login)
+    {
+        $sql = new Sql();
+
+        $results = $sql->select(
+            "SELECT * FROM tb_users
+            WHERE deslogin = : deslogin",
+            [
+                ':deslogin'=>$login
+            ]
+        );
+
+        return (count($results) > 0);
     }
 }
