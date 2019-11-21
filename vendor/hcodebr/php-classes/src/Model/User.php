@@ -13,6 +13,7 @@ class User extends Model
     const SESSION = "User";
     const SECRET = "HcodePhp7_Secret"; // This value must be kept secret so only the code creator will be able to decrypt the hashes
     const SECRET_IV = "HcodePhp7_Secret_IV"; // This value must be kept secret so only the code creator will be able to decrypt the hashes
+    const ERROR = "UserError";
 
     /**
      * Return the logged in user or return a empty User object
@@ -57,13 +58,29 @@ class User extends Model
         }
     }
 
+    /**
+     * Validate inputted username and password with database
+     * and creates the user Session
+     *
+     * @param string $login username already created
+     * @param string $password password correspondent to the $username
+     *
+     * @return object User() containing the session parameters or
+     * in case of invalid pair throw an error message
+     */
     public static function login($login, $password)
     {
         // Access database with the login inputted via form
         $sql = new Sql();
-        $results = $sql->select("SELECT * FROM tb_users WHERE deslogin = :LOGIN", array(
+        $results = $sql->select(
+            "SELECT * FROM tb_users a 
+            INNER JOIN tb_persons b 
+            ON a.idperson = b.idperson 
+            WHERE a.deslogin = :LOGIN",
+            array(
             ":LOGIN"=>$login
-        ));
+            )
+        );
         
         // Invalid username response
         if (count($results) === 0) {
@@ -74,8 +91,13 @@ class User extends Model
         $data = $results[0];
         if (password_verify($password, $data["despassword"]) === true) {
             $user = new User();
+
+            $data['desperson'] = ($data['desperson']);
+
             $user->setData($data);
+            
             $_SESSION[User::SESSION] = $user->getValues();
+            
             return $user;
         } else {
             throw new \Exception("Usuário ou senha inválidos", 1);
@@ -109,11 +131,16 @@ class User extends Model
     public function get($iduser)
     {
         $sql = new Sql();
+        
         $results = $sql->select(
             "SELECT * FROM tb_users a INNER JOIN tb_persons b USING(idperson) WHERE a.iduser = :iduser",
             array(":iduser"=>$iduser)
         );
+        
         $data = $results[0];
+
+        $data['desperson'] = ($data['desperson']);
+        
         $this->setData($data);
     }
 
@@ -122,9 +149,9 @@ class User extends Model
         $sql = new Sql();
         
         $results = $sql->select("CALL sp_users_save(:desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
-            ":desperson"=>$this->getdesperson(),
+            ":desperson"=>utf8_decode($this->getdesperson()),
             ":deslogin"=>$this->getdeslogin(),
-            ":despassword"=>$this->getdespassword(),
+            ":despassword"=>User::getPasswordHash($this->getdespassword()),
             ":desemail"=>$this->getdesemail(),
             ":nrphone"=>$this->getnrphone(),
             ":inadmin"=>$this->getinadmin()
@@ -139,9 +166,9 @@ class User extends Model
         
         $results = $sql->select("CALL sp_usersupdate_save(:iduser, :desperson, :deslogin, :despassword, :desemail, :nrphone, :inadmin)", array(
             ":iduser"=>$this->getiduser(),
-            ":desperson"=>$this->getdesperson(),
+            ":desperson"=>utf8_decode($this->getdesperson()),
             ":deslogin"=>$this->getdeslogin(),
-            ":despassword"=>$this->getdespassword(),
+            ":despassword"=>User::getPasswordHash($this->getdespassword()),
             ":desemail"=>$this->getdesemail(),
             ":nrphone"=>$this->getnrphone(),
             ":inadmin"=>$this->getinadmin()
@@ -256,9 +283,14 @@ class User extends Model
     {
         $sql = new Sql();
 
-        $sql->query("UPDATE tb_userspasswordsrecoveries SET dtrecovery = NOW() WHERE idrecovery =:idrecovery", array(
+        $sql->query(
+            "UPDATE tb_userspasswordsrecoveries 
+            SET dtrecovery = NOW() 
+            WHERE idrecovery =:idrecovery",
+            array(
             ":idrecovery"=>$idrecovery
-        ));
+            )
+        );
     }
 
     public function setPassword($password)
@@ -269,5 +301,35 @@ class User extends Model
             ":password"=>$password,
             ":iduser"=>$this->getiduser()
         ));
+    }
+
+    public static function setError($msg)
+    {
+        $_SESSION[User::ERROR] = $msg;
+    }
+
+    public static function getError()
+    {
+        $msg = (isset($_SESSION[User::ERROR]) && $_SESSION[User::ERROR]) ? $_SESSION[User::ERROR] : "";
+
+        User::clearError();
+        
+        return $msg;
+    }
+
+    public static function clearError()
+    {
+        $_SESSION[User::ERROR] = null;
+    }
+
+    public static function getPasswordHash($password)
+    {
+        return password_hash(
+            $password,
+            PASSWORD_DEFAULT,
+            [
+                'cost'=>12
+            ]
+        );
     }
 }
