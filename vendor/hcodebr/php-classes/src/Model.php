@@ -27,8 +27,7 @@ class Model
     }
 
     /**
-     * Loads all the data from the db into the PHP Class Object
-     * using dynamic setters via __call magic method
+     * Sets all the variables inside an array into the object
      */
     public function setData($data = array())
     {
