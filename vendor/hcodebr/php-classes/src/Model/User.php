@@ -19,6 +19,8 @@ class User extends Model
 
     /**
      * Return the logged in user or return a empty User object
+     *
+     * @return object User instance from the current session if there is one.
      */
     public static function getFromSession()
     {
@@ -106,6 +108,15 @@ class User extends Model
         }
     }
 
+    /**
+     * If logged in and has access to the specified privileges does nothing;
+     * If logged out redirects the user to the login page;
+     * If admin privileges are required redirects user to admin login page;
+     *
+     * @param boolean $inadmin true for admin page, false for user page.
+     *
+     * @return void
+     */
     public static function verifyLogin($inadmin = true)
     {
         if (!User::checkLogin($inadmin)) {
@@ -402,5 +413,25 @@ class User extends Model
     public static function clearSuccess()
     {
         $_SESSION[User::SUCCESS] = null;
+    }
+
+    public function getOrders()
+    {
+        $sql = new Sql();
+        
+        $results = $sql->select(
+            "SELECT * FROM tb_orders a
+            INNER JOIN tb_ordersstatus b USING(idstatus)
+            INNER JOIN tb_carts c USING(idcart)
+            INNER JOIN tb_users d ON d.iduser = a.iduser
+            INNER JOIN tb_addresses e USING(idaddress)
+            INNER JOIN tb_persons f ON f.idperson = d.idperson
+            WHERE a.iduser = :iduser",
+            [
+                ':iduser'=>$this->getiduser()
+            ]
+        );
+
+        return $results;
     }
 }
