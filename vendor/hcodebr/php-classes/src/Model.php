@@ -37,6 +37,8 @@ class Model
     }
 
     /**
+     * Returns all the values inside of the current object
+     * 
      * @return $this->values
      */
     public function getValues()
