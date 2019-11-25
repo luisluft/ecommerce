@@ -3,19 +3,42 @@
 use Hcode\PageAdmin;
 use Hcode\Model\User;
 
-
 $app->get(
     '/admin/users',
     function () {
         User::verifyLogin();
 
-        $users = User::listAll();
+        // String searched inside textbox
+        $search = (isset($_GET['search'])) ? $_GET['search'] : "";
+        
+        // What page the table is
+        $page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
+
+        // Stores
+        if ($search != '') {
+            $pagination = User::getPageSearch($search, $page);
+        } else {
+            $pagination = User::getPage($page);
+        }
+
+        $pages = [];
+
+        for ($i=0; $i < $pagination['pages']; $i++) {
+            $path = http_build_query(['page'=>$i+1, 'search'=>$search]);
+            
+            array_push($pages, ['href'=>'/admin/users?' . $path, 'text'=>$i+1]);
+        }
 
         $page = new PageAdmin();
 
-        $page->setTpl("users", array(
-            "users"=>$users
-        ));
+        $page->setTpl(
+            "users",
+            array(
+                "users"=>$pagination['data'],
+                "search"=>$search,
+                "pages"=>$pages
+            )
+        );
     }
 );
 
