@@ -11,13 +11,42 @@ $app->get(
     function () {
         User::verifyLogin();
 
-        $categories = Category::listAll();
+        // String searched inside textbox
+        $search = (isset($_GET['search'])) ? $_GET['search'] : "";
         
+        // What page the table is
+        $page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
+
+        // Empty vs inputted text for search
+        if ($search != '') {
+            $pagination = Category::getPageSearch($search, $page);
+        } else {
+            $pagination = Category::getPage($page);
+        }
+
+        $pages = [];
+
+        for ($i=0; $i < $pagination['pages']; $i++) {
+            $path = http_build_query(['page'=>$i+1, 'search'=>$search]);
+            
+            array_push($pages, ['href'=>'/admin/categories?' . $path, 'text'=>$i+1]);
+        }
+
+        // var_dump($pagination['data']);
+        // var_dump($search);
+        // var_dump($pages);
+        // exit;
+
         $page = new PageAdmin();
 
-        $page->setTpl("categories", array(
-            "categories"=>$categories
-        ));
+        $page->setTpl(
+            "categories",
+            array(
+                "categories"=>$pagination['data'],
+                "search"=>$search,
+                "pages"=>$pages
+            )
+        );
     }
 );
 
