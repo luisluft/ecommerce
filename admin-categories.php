@@ -32,11 +32,6 @@ $app->get(
             array_push($pages, ['href'=>'/admin/categories?' . $path, 'text'=>$i+1]);
         }
 
-        // var_dump($pagination['data']);
-        // var_dump($search);
-        // var_dump($pages);
-        // exit;
-
         $page = new PageAdmin();
 
         $page->setTpl(

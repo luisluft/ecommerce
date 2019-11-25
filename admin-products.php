@@ -8,16 +8,36 @@ $app->get(
     '/admin/products',
     function () {
         User::verifyLogin();
+        // String searched inside textbox
+        $search = (isset($_GET['search'])) ? $_GET['search'] : "";
+        
+        // What page the table is
+        $page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
 
-        $products = Product::listAll();
+        // Empty vs inputted text for search
+        if ($search != '') {
+            $pagination = Product::getPageSearch($search, $page);
+        } else {
+            $pagination = Product::getPage($page);
+        }
 
-        $page = new PageAdmin(); // adds the header and footer
+        $pages = [];
+
+        for ($i=0; $i < $pagination['pages']; $i++) {
+            $path = http_build_query(['page'=>$i+1, 'search'=>$search]);
+            
+            array_push($pages, ['href'=>'/admin/products?' . $path, 'text'=>$i+1]);
+        }
+
+        $page = new PageAdmin();
 
         $page->setTpl(
             "products",
-            [
-            "products"=>$products
-            ]
+            array(
+                "products"=>$pagination['data'],
+                "search"=>$search,
+                "pages"=>$pages
+            )
         );
     }
 );
