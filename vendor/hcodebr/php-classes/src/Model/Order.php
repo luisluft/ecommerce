@@ -64,7 +64,8 @@ class Order extends Model
         $sql = new Sql();
 
         return $sql->select(
-            "SELECT * FROM tb_orders a
+            "SELECT * 
+            FROM tb_orders a
             INNER JOIN tb_ordersstatus b USING(idstatus)
             INNER JOIN tb_carts c USING(idcart)
             INNER JOIN tb_users d ON d.iduser = a.iduser
@@ -132,5 +133,92 @@ class Order extends Model
     public static function clearError()
     {
         $_SESSION[Order::ERROR] = null;
+    }
+
+    
+    /**
+     * Query database for all users and limits the amount
+     * of shown users per page displayed
+     *
+     * @param int $page [optional] page to start
+     * @param int $itemsPerPage [optional] number of items displayed per page
+     *
+     * @return array
+     * ['data'] for the query results,
+     * ['total'] for the total amount of items in database,
+     * ['pages'] for the total amount of pages displayed.
+     */
+    public static function getPage($page = 1, $itemsPerPage = 10)
+    {
+        $start = ($page - 1) * $itemsPerPage; // dynamic start of page
+        
+        $sql = new Sql();
+
+        $results = $sql->select(
+            "SELECT sql_calc_found_rows *
+            FROM tb_orders a
+            INNER JOIN tb_ordersstatus b USING(idstatus)
+            INNER JOIN tb_carts c USING(idcart)
+            INNER JOIN tb_users d ON d.iduser = a.iduser
+            INNER JOIN tb_addresses e USING(idaddress)
+            INNER JOIN tb_persons f ON f.idperson = d.idperson
+            ORDER BY a.dtregister DESC
+            LIMIT $start, $itemsPerPage"
+        );
+
+        $resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal"); // quantity of items on db
+
+        return [
+            'data'=>$results,
+            'total'=>(int)$resultTotal[0]["nrtotal"],
+            'pages'=>ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
+        ];
+    }
+
+    /**
+     * Query database for all users related to the
+     * searched string $search, and limits the amount
+     * of shown users per page displayed
+     *
+     * @param string $search the string to search for in database
+     * @param int $page [optional] page to start
+     * @param int $itemsPerPage [optional] number of items displayed per page
+     *
+     * @return array
+     * ['data'] for the query results,
+     * ['total'] for the total amount of items in database,
+     * ['pages'] for the total amount of pages displayed.
+     */
+    public static function getPageSearch($search, $page = 1, $itemsPerPage = 10)
+    {
+        $start = ($page - 1) * $itemsPerPage; // dynamic start of page
+        
+        $sql = new Sql();
+
+        $results = $sql->select(
+            "SELECT sql_calc_found_rows *
+            FROM tb_orders a
+            INNER JOIN tb_ordersstatus b USING(idstatus)
+            INNER JOIN tb_carts c USING(idcart)
+            INNER JOIN tb_users d ON d.iduser = a.iduser
+            INNER JOIN tb_addresses e USING(idaddress)
+            INNER JOIN tb_persons f ON f.idperson = d.idperson
+            WHERE a.idorder = :id
+            OR f.desperson LIKE :search
+            ORDER BY a.dtregister DESC
+            LIMIT $start, $itemsPerPage",
+            [
+                ':id'=>$search,
+                ':search'=>'%' . $search . '%'
+            ]
+        );
+
+        $resultTotal = $sql->select("SELECT FOUND_ROWS() AS nrtotal"); // quantity of items on db
+
+        return [
+            'data'=>$results,
+            'total'=>(int)$resultTotal[0]["nrtotal"],
+            'pages'=>ceil($resultTotal[0]["nrtotal"] / $itemsPerPage)
+        ];
     }
 }
