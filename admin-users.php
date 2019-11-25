@@ -14,7 +14,7 @@ $app->get(
         // What page the table is
         $page = (isset($_GET['page'])) ? (int)$_GET['page'] : 1;
 
-        // Stores
+        // Empty vs inputted text for search
         if ($search != '') {
             $pagination = User::getPageSearch($search, $page);
         } else {
