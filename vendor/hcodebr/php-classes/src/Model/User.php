@@ -313,6 +313,14 @@ class User extends Model
         );
     }
 
+    /**
+     * Insert the password inside the object instance to
+     * the database without hashing it.
+     *
+     * @param string $password password of the respective user.
+     *
+     * @return void
+     */
     public function setPassword($password)
     {
         $sql = new Sql();
@@ -342,6 +350,13 @@ class User extends Model
         $_SESSION[User::ERROR] = null;
     }
 
+    /**
+     * Hashes the password for later insertion in the database
+     * 
+     * @param string $password password of the respective user
+     * 
+     * @return void
+     */
     public static function getPasswordHash($password)
     {
         return password_hash(
