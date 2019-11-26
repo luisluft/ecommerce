@@ -1,0 +1,11 @@
+{
+    "email": {
+        "username": "****@****.com",
+        "password": "****"
+    },
+    "db": {
+        "username": "****",
+        "password": "****",
+        "databaseName": "****"
+    }
+}

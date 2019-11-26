@@ -9,12 +9,16 @@ use \Hcode\Model\Address;
 use \Hcode\Model\User;
 use \Hcode\Model\Order;
 use \Hcode\Model\OrderStatus;
+use \Hcode\Mailer;
 
 // Redirects the site via GET at route '/'
 $app->get(
     '/',
     function () {
         $products = Product::listAll();
+
+        echo Mailer::readConfigFile('username');
+        echo Mailer::readConfigFile('password');
 
         $page = new Page(); // adds the header and footer
 
