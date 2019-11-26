@@ -1,4 +1,5 @@
 <?php
+
 // Composer's autoload for dependencies
 require_once "vendor/autoload.php";
 
