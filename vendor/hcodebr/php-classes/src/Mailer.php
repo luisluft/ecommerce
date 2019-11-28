@@ -12,15 +12,6 @@ class Mailer
 
     private $mail;
 
-    public static function readConfigFile($value)
-    {
-        $file = file_get_contents("config.json");
-        
-        $array = json_decode($file, true);
-
-        return $array['email'][$value];
-    }
-
     public function __construct($toAddress, $toName, $subject, $tplName, $data = array())
     {
         $config = array(
