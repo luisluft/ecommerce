@@ -7,6 +7,8 @@ use Rain\Tpl;
 class Mailer
 {
     const NAME_FROM = "Foguinho Store";
+    const EMAIL = "luis.luft@tecluft.com.br";
+    const PASSWORD = "N1uatr2UY9";
 
     private $mail;
 
@@ -68,13 +70,13 @@ class Mailer
         $this->mail->SMTPAuth = true;
 
         //Username to use for SMTP authentication - use full email address for gmail
-        $this->mail->Username =  Mailer::readConfigFile('username');
+        $this->mail->Username =  Mailer::EMAIL;
 
         //Password to use for SMTP authentication
-        $this->mail->Password = Mailer::readConfigFile('password');
+        $this->mail->Password = Mailer::PASSWORD;
 
         //Set who the message is to be sent from
-        $this->mail->setFrom(Mailer::readConfigFile('username'), Mailer::NAME_FROM);
+        $this->mail->setFrom(Mailer::EMAIL, Mailer::NAME_FROM);
 
         //Set an alternative reply-to address
         // $this->mail->addReplyTo('replyto@example.com', 'First Last');
