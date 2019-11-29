@@ -31,7 +31,7 @@ function getUserName()
     // logged in user (in this case, the required one is the person's name)
     $user->get($user->getiduser());
 
-    return utf8_decode($user->getdesperson());
+    return $user->getdesperson();
 }
 
 function getCartNrQtd()
