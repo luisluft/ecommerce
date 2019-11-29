@@ -430,6 +430,10 @@ $app->get(
         if (!$address->getdesaddress()) {
             $address->setdesaddress('');
         }
+        // No number informed
+        if (!$address->getdesnumber()) {
+            $address->setdesnumber('');
+        }
         if (!$address->getdescomplement()) {
             $address->setdescomplement('');
         }
@@ -457,7 +461,7 @@ $app->get(
                 'cart'=>$cart->getValues(),
                 'address'=>$address->getValues(),
                 'products'=>$cart->getproducts(),
-                'error'=>Address::getMsgError()
+                'checkoutError'=>Address::getMsgError()
             ]
         );
     }
