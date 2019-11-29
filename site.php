@@ -17,9 +17,6 @@ $app->get(
     function () {
         $products = Product::listAll();
 
-        echo Mailer::readConfigFile('username');
-        echo Mailer::readConfigFile('password');
-
         $page = new Page(); // adds the header and footer
 
         $page->setTpl(
