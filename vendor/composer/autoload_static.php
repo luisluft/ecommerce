@@ -7,6 +7,10 @@ namespace Composer\Autoload;
 class ComposerStaticInit52ad3b695a326813a2b2f7d3bac6c4b9
 {
     public static $prefixLengthsPsr4 = array (
+        'P' => 
+        array (
+            'PhpConsole\\' => 11,
+        ),
         'H' => 
         array (
             'Hcode\\' => 6,
@@ -14,6 +18,10 @@ class ComposerStaticInit52ad3b695a326813a2b2f7d3bac6c4b9
     );
 
     public static $prefixDirsPsr4 = array (
+        'PhpConsole\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/php-console/php-console/src/PhpConsole',
+        ),
         'Hcode\\' => 
         array (
             0 => __DIR__ . '/..' . '/hcodebr/php-classes/src',
