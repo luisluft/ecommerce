@@ -7,10 +7,28 @@ use Rain\Tpl;
 class Mailer
 {
     const NAME_FROM = "Foguinho Store";
-    const EMAIL = "luis.luft@tecluft.com.br";
-    const PASSWORD = "N1uatr2UY9";
 
     private $mail;
+
+    /**
+     * Read the config.json file inside of the project root folder
+     * for the values of username and password of the email used
+     * for mailing the 'forgot password' email to user
+     * To use this feature just insert your credentials inside the 'config - example.json' file
+     * and change the name of the file to 'config.json'
+     *
+     * @param string $value Either username, or password.
+     *
+     * @return string Value of the username or password.
+     */
+    public static function readConfigFile($value)
+    {
+        $strFileContents = file_get_contents("config.json");
+
+        $array = json_decode($strFileContents, true);
+
+        return $array['email'][$value];
+    }
 
     public function __construct($toAddress, $toName, $subject, $tplName, $data = array())
     {
@@ -46,7 +64,7 @@ class Mailer
         $this->mail->Debugoutput = 'html';
         
         //Set the hostname of the mail server
-        $this->mail->Host = 'smtp.gmail.com';
+        $this->mail->Host = 'mail.tecluft.com.br';
         // use
         // $this->mail->Host = gethostbyname('smtp.gmail.com');
         // if your network does not support SMTP over IPv6
@@ -61,13 +79,13 @@ class Mailer
         $this->mail->SMTPAuth = true;
 
         //Username to use for SMTP authentication - use full email address for gmail
-        $this->mail->Username =  Mailer::EMAIL;
+        $this->mail->Username =  $this->readConfigFile('username');
 
         //Password to use for SMTP authentication
-        $this->mail->Password = Mailer::PASSWORD;
+        $this->mail->Password = $this->readConfigFile('password');
 
         //Set who the message is to be sent from
-        $this->mail->setFrom(Mailer::EMAIL, Mailer::NAME_FROM);
+        $this->mail->setFrom($this->readConfigFile('username'), Mailer::NAME_FROM);
 
         //Set an alternative reply-to address
         // $this->mail->addReplyTo('replyto@example.com', 'First Last');
