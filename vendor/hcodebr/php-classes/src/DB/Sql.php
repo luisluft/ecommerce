@@ -15,7 +15,7 @@ class Sql
 
     public function __construct()
     {
-        $this->conn = new \PDO(
+        $this->conn = new PDO(
             "mysql:dbname=" . Sql::DBNAME . ";host=" . Sql::HOSTNAME,
             Sql::USERNAME,
             Sql::PASSWORD
@@ -62,6 +62,6 @@ class Sql
 
         $stmt->execute();
 
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
