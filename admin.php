@@ -8,6 +8,7 @@ $app->get(
     '/phpinfo',
     function () {
         phpinfo();
+        phpinfo(INFO_MODULES);
     }
 );
 
