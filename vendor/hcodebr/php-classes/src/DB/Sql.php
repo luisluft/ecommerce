@@ -2,6 +2,8 @@
 
 namespace Hcode\DB;
 
+use PDO;
+
 class Sql
 {
     const HOSTNAME = "50.116.112.41";
@@ -14,7 +16,7 @@ class Sql
     public function __construct()
     {
         $this->conn = new \PDO(
-            "mysql:dbname=".Sql::DBNAME.";host=".Sql::HOSTNAME,
+            "mysql:dbname=" . Sql::DBNAME . ";host=" . Sql::HOSTNAME,
             Sql::USERNAME,
             Sql::PASSWORD
         );
@@ -52,7 +54,7 @@ class Sql
         $stmt->execute();
     }
 
-    public function select($rawQuery, $params = array()):array
+    public function select($rawQuery, $params = array()): array
     {
         $stmt = $this->conn->prepare($rawQuery);
 
